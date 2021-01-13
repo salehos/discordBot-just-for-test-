@@ -1,31 +1,33 @@
-import os
-
+# import os
+import asyncio
 import discord
 from dotenv import load_dotenv
 
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
+TOKEN = "Nzk4MjM5OTQ0MzY3MTQ0OTcw.X_yI4Q.SwQkhiCxPZ1p9LsarNU2bZGFg14"
+GUILD = "Meeting and Jalase."
 
-client = discord.Client()
+
+intents = discord.Intents.default()
+intents.members = True
+client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    members = ""
-    # print(f'{client.user} has connected to Discord!')
     guild = discord.utils.find(lambda g: g.name == GUILD, client.guilds)
-    print(
-    f'{client.user} is connected to the following guild:\n'
-    f'{guild.name}(id: {guild.id})'
+    for member in guild.members:
+        print(member.name)
+    print(f'{client.user.name} has connected to Discord!')
+
+@client.event
+async def on_member_join(member):
+    print("worked")
+    await member.create_dm()
+    await member.dm_channel.send(
+        f'Hi {member.name}, welcome to my Discord server!'
     )
-    members = '\n - '.join([member.name for member in guild.members])
-    print(f'Guild Members:\n - {members}')
-        # print(guild.members)
-
-        # for member in guild.members:
-        #     print(member.name)
-
 
 
 
 client.run(TOKEN)
+
