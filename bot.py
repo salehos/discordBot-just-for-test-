@@ -1,11 +1,10 @@
-# import os
-import asyncio
+import os
 import discord
 from dotenv import load_dotenv
 
 load_dotenv()
-TOKEN = "Nzk4MjM5OTQ0MzY3MTQ0OTcw.X_yI4Q.SwQkhiCxPZ1p9LsarNU2bZGFg14"
-GUILD = "Meeting and Jalase."
+TOKEN = os.getenv('DISCORD_TOKEN')
+GUILD = os.getenv('DISCORD_GUILD')
 
 
 intents = discord.Intents.default()
