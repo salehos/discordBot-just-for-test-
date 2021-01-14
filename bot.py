@@ -33,10 +33,8 @@ async def on_message(message):
     myList = open("list.txt", "r+")
     request_list = myList.read()
     myList.close()
-    print(request_list)
     if message.author == client.user:
         return
-    print(message.channel)
     if (str(message.channel) == "group-1") and ("request" in str(message.content)):
         if "group-1" not in request_list :
             messages = message.content + "    " +  "group = group-1\n"
@@ -59,8 +57,6 @@ async def on_message(message):
             has_been_delevered(message)
         else:
             reserved_before(message)
-    print("_______________________________________ ")
-
 
 
 
