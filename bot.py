@@ -25,16 +25,16 @@ def reserved_before(message):
 
 bot = commands.Bot(command_prefix='$')
 
-@bot.command(name= "request", help = "($request [question number]) for request mentor for special question")
-async def nine_nine(ctx):
+@bot.command(name= "request", help = "($request [question number]) for request mentor for special question FOR MEMBERS")
+async def question_request(ctx):
     response = "There is a problem"
     myList = open("list.txt", "r+")
     request_list = myList.read()
     myList.close()
     if (str(ctx.message.channel) == "group-1") and ("request" in str(ctx.message.content)):
         if "group-1" not in request_list :
-            messages = str(ctx.message.content).replace("$request", "")
-            messages += "    " + "group = group-2\n"
+            messages = "question = " +  str(ctx.message.content).replace("$request", "")
+            messages += "    " + "group = group-1\n"
             myList = open("list.txt" , "a+")
             myList.write(messages)
             myList.flush()
@@ -46,7 +46,7 @@ async def nine_nine(ctx):
 
     elif (str(ctx.message.channel) == "group-2") and ("request" in str(ctx.message.content)):
         if "group-2" not in request_list:
-            messages = str(ctx.message.content).replace("$request","")
+            messages = "question = " + str(ctx.message.content).replace("$request","")
             messages += "    " + "group = group-2\n"
             myList = open("list.txt", "a+")
             myList.write(messages)
@@ -56,8 +56,24 @@ async def nine_nine(ctx):
         else:
             await ctx.message.channel.send(reserved_before(ctx.message))
 
+@bot.command(name= "solve", help = "($solve for solving problems and requests, FOR MENTORS")
+async def solve_request(ctx):
+    if "MENTOR" in str(ctx.message.author.roles):
+        myList = open("list.txt", "r")
+        lines = myList.readlines()
+        myList.close()
+        await ctx.message.channel.send(lines[0])
+        del lines[0]
+        newFile = open("list.txt", "w+")
+        for line in lines:
+            newFile.write(line)
+        newFile.close()
+    else:
+        ctx.message.channel.send("YOU HAVE NOT MENTOR PERMISSION BITCH!")
 
-#
+
+
+
 # @client.event
 # async def on_member_join(member):
 #     print ("hello")
