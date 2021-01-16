@@ -1,75 +1,99 @@
 import os
 import discord
+
+from discord.ext import commands
 from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
-
-def has_been_delevered (message):
-    response = "your message has been delivered"
-    await message.channel.send(response)
-
-def reserved_before(message):
-    response = "you reserved a request before"
-    await message.channel.send(response)
 
 
 intents = discord.Intents.default()
 intents.members = True
 client = discord.Client(intents=intents)
 
-@client.event
-async def on_ready():
-    guild = discord.utils.find(lambda g: g.name == GUILD, client.guilds)
-    print(guild.members)
-    for member in guild.members:
-        print(member.name)
-    print(f'{client.user.name} has connected to Discord!')
+
+def has_been_delevered (message):
+    response = "your message has been delivered"
+    return(response)
+
+def reserved_before(message):
+    response = "you reserved a request before"
+    return (response)
 
 
-@client.event
-async def on_message(message):
+
+bot = commands.Bot(command_prefix='$')
+
+@bot.command(name= "request", help = "($request [question number]) for request mentor for special question")
+async def nine_nine(ctx):
+    response = "There is a problem"
     myList = open("list.txt", "r+")
     request_list = myList.read()
     myList.close()
-    if message.author == client.user:
-        return
-    if (str(message.channel) == "group-1") and ("request" in str(message.content)):
+    if (str(ctx.message.channel) == "group-1") and ("request" in str(ctx.message.content)):
         if "group-1" not in request_list :
-            messages = message.content + "    " +  "group = group-1\n"
+            messages = str(ctx.message.content).replace("$request", "")
+            messages += "    " + "group = group-2\n"
             myList = open("list.txt" , "a+")
             myList.write(messages)
             myList.flush()
             myList.close()
-            has_been_delevered(message)
-        else :
-            reserved_before(message)
+            await ctx.message.channel.send(has_been_delevered(ctx.message))
+        else:
+            await ctx.message.channel.send(reserved_before(ctx.message))
 
 
-    elif (str(message.channel) == "group-2") and ("request" in str(message.content)):
+    elif (str(ctx.message.channel) == "group-2") and ("request" in str(ctx.message.content)):
         if "group-2" not in request_list:
-            messages = message.content + "    " + "group = group-2\n"
+            messages = str(ctx.message.content).replace("$request","")
+            messages += "    " + "group = group-2\n"
             myList = open("list.txt", "a+")
             myList.write(messages)
             myList.flush()
             myList.close()
-            has_been_delevered(message)
+            await ctx.message.channel.send(has_been_delevered(ctx.message))
         else:
-            reserved_before(message)
+            await ctx.message.channel.send(reserved_before(ctx.message))
 
 
+#
+# @client.event
+# async def on_member_join(member):
+#     print ("hello")
+#     await member.create_dm()
+#     await member.dm_channel.send(
+#         f'سلام. به سرور دیسکورد مسابقه وبلوپرز خوش آمدید!{member.name}'
+#     )
+bot.run(TOKEN)
 
-
-@client.event
-async def on_member_join(member):
-    print("worked")
-    await member.create_dm()
-    await member.dm_channel.send(
-        f'Hi {member.name}, welcome to my Discord server!'
-    )
-
-
-
-client.run(TOKEN)
-
+# import os
+# import discord
+# from dotenv import load_dotenv
+# from discord.ext import commands
+#
+# load_dotenv()
+# TOKEN = os.getenv('DISCORD_TOKEN')
+# GUILD = os.getenv('DISCORD_GUILD')
+#
+#
+#
+#
+#
+# @client.event
+# async def on_ready():
+#     guild = discord.utils.find(lambda g: g.name == GUILD, client.guilds)
+#     print(f'{client.user.name} has connected to Discord!')
+#
+#
+# @client.event
+# async def on_member_join(member):
+#     await member.create_dm()
+#     await member.dm_channel.send(
+#         f'سلام. به سرور دیسکورد مسابقه وبلوپرز خوش آمدید!{member.name}'
+#     )
+#
+#
+#
+# client.run(TOKEN)
+#
