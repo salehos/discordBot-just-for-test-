@@ -19,12 +19,11 @@ def reserved_before(message):
 
 bot = commands.Bot(command_prefix='$')
 
-@bot.command(name= "request", help = "($request [question number]) for request mentor for special question FOR MEMBERS")
+@bot.command(name= "request", help = "($request [question number]) for request mentor for question FOR MEMBERS")
 async def question_request(ctx):
     response = "There is a problem"
     numberOfQuestion = str(ctx.message.content)
     numberOfQuestion = numberOfQuestion.replace("$request ", "")
-    print(numberOfQuestion)
     myList = open("list.txt", "r+")
     request_list = myList.read()
     myList.close()
