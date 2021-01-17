@@ -7,12 +7,6 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
-
-intents = discord.Intents.default()
-intents.members = True
-client = discord.Client(intents=intents)
-
-
 def has_been_delevered (message):
     response = "your message has been delivered"
     return(response)
@@ -28,11 +22,14 @@ bot = commands.Bot(command_prefix='$')
 @bot.command(name= "request", help = "($request [question number]) for request mentor for special question FOR MEMBERS")
 async def question_request(ctx):
     response = "There is a problem"
+    numberOfQuestion = str(ctx.message.content)
+    numberOfQuestion = numberOfQuestion.replace("$request ", "")
+    print(numberOfQuestion)
     myList = open("list.txt", "r+")
     request_list = myList.read()
     myList.close()
     if (str(ctx.message.channel) == "group-1") and ("request" in str(ctx.message.content)):
-        if "group-1" not in request_list :
+        if f"question =  {numberOfQuestion}    group = group-1" not in request_list :
             messages = "question = " +  str(ctx.message.content).replace("$request", "")
             messages += "    " + "group = group-1\n"
             myList = open("list.txt" , "a+")
@@ -45,7 +42,7 @@ async def question_request(ctx):
 
 
     elif (str(ctx.message.channel) == "group-2") and ("request" in str(ctx.message.content)):
-        if "group-2" not in request_list:
+        if f"question =  {numberOfQuestion}    group = group-2" not in request_list:
             messages = "question = " + str(ctx.message.content).replace("$request","")
             messages += "    " + "group = group-2\n"
             myList = open("list.txt", "a+")
@@ -69,18 +66,23 @@ async def solve_request(ctx):
             newFile.write(line)
         newFile.close()
     else:
-        ctx.message.channel.send("YOU HAVE NOT MENTOR PERMISSION BITCH!")
+        responce = "YOU HAVE NOT MENTOR PERMISSION BITCH!"
+        await ctx.message.channel.send(responce)
+
+
+intents = discord.Intents.default()
+intents.members = True
+client = discord.Client(intents=intents)
 
 
 
-
-# @client.event
-# async def on_member_join(member):
-#     print ("hello")
-#     await member.create_dm()
-#     await member.dm_channel.send(
-#         f'سلام. به سرور دیسکورد مسابقه وبلوپرز خوش آمدید!{member.name}'
-#     )
+@client.event
+async def on_member_join(member):
+    print ("hello")
+    await member.create_dm()
+    await member.dm_channel.send(
+        f'سلام. به سرور دیسکورد مسابقه وبلوپرز خوش آمدید!{member.name}'
+    )
 bot.run(TOKEN)
 
 # import os
