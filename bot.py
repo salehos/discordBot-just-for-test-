@@ -88,15 +88,36 @@ async def solved_request(ctx):
             myList = open("requested.txt", "r")
             lines = myList.readlines()
             myList.close()
+            i = 0
             for line in lines:
-                if message == line:
+                if message in line:
                     print("found it")
-                    del(line)
                     break
+                i += 1
+            del lines[i]
             newRequestedFile = open("requested.txt", "w+")
             for line in lines:
                 newRequestedFile.write(line)
             newRequestedFile.close()
+        else:
+            pass
+@bot.command(name="showreserved", help="($showreseved) for showing unsolved and reserved questions, FOR MENTORS")
+async def showreserved(ctx):
+    if "MENTOR" in str(ctx.message.author.roles):
+        reservedquestions = open("requested.txt", "r+")
+        reservedList = reservedquestions.read()
+        reservedquestions.close()
+        await ctx.message.channel.send(reservedList)
+    else:
+        pass
+@bot.command(name="showrequests", help="($showrequests) for showing all unreserved questions, FOR MENTORS")
+async def showrequests(ctx):
+    if "MENTOR" in str(ctx.message.author.roles):
+        requestedQuestions = open("list.txt", "r+")
+        requestedlist = requestedQuestions.read()
+        requestedQuestions.close()
+        await ctx.message.channel.send(requestedlist)
+
 
 
 @bot.command(name="notsolved", help="($unsolved questionnumber group for unsolved problems, FOR MENTORS")
