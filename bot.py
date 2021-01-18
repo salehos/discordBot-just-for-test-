@@ -59,15 +59,49 @@ async def solve_request(ctx):
         lines = myList.readlines()
         myList.close()
         await ctx.message.channel.send(lines[0])
+        reservedQuestions = open("requested.txt","a+")
+        reservedQuestions.write(str(lines[0]))
+        reservedQuestions.flush()
+        reservedQuestions.close()
         del lines[0]
         newFile = open("list.txt", "w+")
         for line in lines:
             newFile.write(line)
         newFile.close()
+
     else:
         responce = "YOU HAVE NOT MENTOR PERMISSION BITCH!"
         await ctx.message.channel.send(responce)
 
+@bot.command(name= "solved", help = "($solved questionnumber group for solved problems, FOR MENTORS")
+async def solved_request(ctx):
+    if "MENTOR" in str(ctx.message.author.roles):
+        message = str(ctx.message.content)
+        message = message.replace("$solved ", "")
+        questionAndNumber = message.split(" ")
+        requestedQuestions = open("requested.txt","r+")
+        requestedlist = requestedQuestions.read()
+        requestedQuestions.close()
+        message = f"question =  {str(questionAndNumber[0])}    group = group-{str(questionAndNumber[1])}"
+        if message in requestedlist :
+            await ctx.message.channel.send("solved "+ str(message))
+            myList = open("requested.txt", "r")
+            lines = myList.readlines()
+            myList.close()
+            for line in lines:
+                if message == line:
+                    print("found it")
+                    del(line)
+                    break
+            newRequestedFile = open("requested.txt", "w+")
+            for line in lines:
+                newRequestedFile.write(line)
+            newRequestedFile.close()
+
+
+@bot.command(name="notsolved", help="($unsolved questionnumber group for unsolved problems, FOR MENTORS")
+async def unsolved_request(ctx):
+    pass
 
 intents = discord.Intents.default()
 intents.members = True
