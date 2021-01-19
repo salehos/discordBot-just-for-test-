@@ -28,9 +28,9 @@ async def question_request(ctx):
     request_list = myList.read()
     myList.close()
     if (str(ctx.message.channel) == "group-1") and ("request" in str(ctx.message.content)):
-        if f"question =  {numberOfQuestion}    group = group-1" not in request_list :
+        if f"question =  {numberOfQuestion}    group = group-1    mark=notreserved" not in request_list :
             messages = "question = " +  str(ctx.message.content).replace("$request", "")
-            messages += "    " + "group = group-1\n"
+            messages += "    " + "group = group-1    mark=notreserved\n"
             myList = open("list.txt" , "a+")
             myList.write(messages)
             myList.flush()
@@ -41,9 +41,9 @@ async def question_request(ctx):
 
 
     elif (str(ctx.message.channel) == "group-2") and ("request" in str(ctx.message.content)):
-        if f"question =  {numberOfQuestion}    group = group-2" not in request_list:
+        if f"question =  {numberOfQuestion}    group = group-2    mark=notreserved" not in request_list:
             messages = "question = " + str(ctx.message.content).replace("$request","")
-            messages += "    " + "group = group-2\n"
+            messages += "    " + "group = group-2    mark=notreserved\n"
             myList = open("list.txt", "a+")
             myList.write(messages)
             myList.flush()
@@ -58,12 +58,13 @@ async def solve_request(ctx):
         myList = open("list.txt", "r")
         lines = myList.readlines()
         myList.close()
-        await ctx.message.channel.send(lines[0])
-        reservedQuestions = open("requested.txt","a+")
-        reservedQuestions.write(str(lines[0]))
-        reservedQuestions.flush()
-        reservedQuestions.close()
-        del lines[0]
+        i = 0
+        for line in lines:
+            if "mark=notreserved" in line:
+               break
+            i += 1
+        await ctx.message.channel.send(lines[i])
+        lines[i] = lines[i].replace("notreserved",'reserved')
         newFile = open("list.txt", "w+")
         for line in lines:
             newFile.write(line)
@@ -79,50 +80,120 @@ async def solved_request(ctx):
         message = str(ctx.message.content)
         message = message.replace("$solved ", "")
         questionAndNumber = message.split(" ")
-        requestedQuestions = open("requested.txt","r+")
-        requestedlist = requestedQuestions.read()
+        requestedQuestions = open("list.txt","r+")
+        requestedlist = requestedQuestions.readlines()
         requestedQuestions.close()
-        message = f"question =  {str(questionAndNumber[0])}    group = group-{str(questionAndNumber[1])}"
+        for line in requestedlist:
+            if "\n" in line:
+                line = line.replace("\n","")
+        message = f"question =  {str(questionAndNumber[0])}    group = group-{str(questionAndNumber[1])}    mark=reserved"
+        foundMessage = False
         if message in requestedlist :
-            await ctx.message.channel.send("solved "+ str(message))
-            myList = open("requested.txt", "r")
-            lines = myList.readlines()
-            myList.close()
+            print("FUCKOFF")
+            channelMessage = message.replace("reserved","solved")
+            await ctx.message.channel.send(str(channelMessage))
             i = 0
-            for line in lines:
+            for line in requestedlist:
                 if message in line:
+                    b = True
                     print("found it")
                     break
                 i += 1
-            del lines[i]
-            newRequestedFile = open("requested.txt", "w+")
-            for line in lines:
+
+            del requestedlist[i]
+            newRequestedFile = open("list.txt", "w+")
+            for line in requestedlist:
                 newRequestedFile.write(line)
             newRequestedFile.close()
         else:
-            pass
-@bot.command(name="showreserved", help="($showreseved) for showing unsolved and reserved questions, FOR MENTORS")
-async def showreserved(ctx):
-    if "MENTOR" in str(ctx.message.author.roles):
-        reservedquestions = open("requested.txt", "r+")
-        reservedList = reservedquestions.read()
-        reservedquestions.close()
-        await ctx.message.channel.send(reservedList)
-    else:
-        pass
-@bot.command(name="showrequests", help="($showrequests) for showing all unreserved questions, FOR MENTORS")
-async def showrequests(ctx):
-    if "MENTOR" in str(ctx.message.author.roles):
-        requestedQuestions = open("list.txt", "r+")
-        requestedlist = requestedQuestions.read()
-        requestedQuestions.close()
-        await ctx.message.channel.send(requestedlist)
+            if not foundMessage:
+                await ctx.message.channel.send("there is no reserved question for this group and this question")
 
 
 
 @bot.command(name="notsolved", help="($unsolved questionnumber group for unsolved problems, FOR MENTORS")
 async def unsolved_request(ctx):
-    pass
+    if "MENTOR" in str(ctx.message.author.roles):
+        message = str(ctx.message.content)
+        message = message.replace("$notsolved ", "")
+        questionAndNumber = message.split(" ")
+        requestedQuestions = open("list.txt","r+")
+        requestedlist = requestedQuestions.readlines()
+        requestedQuestions.close()
+        for line in requestedlist:
+            if "\n" in line:
+                line = line.replace("\n", "")
+        message = f"question =  {str(questionAndNumber[0])}    group = group-{str(questionAndNumber[1])}    mark=reserved"
+        foundMessage = False
+        if message in requestedlist :
+            print("FUCKOFF")
+            channelMessage = message.replace("reserved","notreserved")
+            await ctx.message.channel.send(str(channelMessage))
+            i = 0
+            for line in requestedlist:
+                print(message)
+                print(line)
+                if message in line:
+                    foundMessage = True
+                    break
+                i += 1
+            requestedlist[i] = requestedlist[i].replace("reserved","notreserved")
+            newRequestedFile = open("list.txt", "w+")
+            for line in requestedlist:
+                newRequestedFile.write(line)
+            newRequestedFile.close()
+        else:
+            if not foundMessage:
+                await ctx.message.channel.send("there is no reserved question for this group and this question")
+    else:
+        await ctx.message.channel.send("you have not that permission")
+
+
+
+
+
+
+@bot.command(name="showreserved", help="($showreseved) for showing unsolved and reserved questions, FOR MENTORS")
+async def showreserved(ctx):
+    if "MENTOR" in str(ctx.message.author.roles):
+        reservedquestions = open("list.txt", "r+")
+        reservedList = reservedquestions.readlines()
+        reservedquestions.close()
+        isThereReserve = False
+        i = 0
+        for line in reservedList:
+            if "\n" in line:
+                line = line.replace("\n","")
+        for line in reservedList:
+            if "mark=reserved" in line:
+                isThereReserve = True
+                await ctx.message.channel.send(line)
+            i += 1
+        if not isThereReserve:
+            await ctx.message.channel.send("there is no reserved question")
+    else:
+        await ctx.message.channel.send("you have not that permission!")
+
+@bot.command(name="showrequests", help="($showrequests) for showing all unreserved questions, FOR MENTORS")
+async def showrequests(ctx):
+    if "MENTOR" in str(ctx.message.author.roles):
+        reservedquestions = open("list.txt", "r+")
+        reservedList = reservedquestions.readlines()
+        reservedquestions.close()
+        i = 0
+        isThereRequest = False
+        for line in reservedList:
+            if "mark=unreserved" in line:
+                isThereRequest = True
+                await ctx.message.channel.send(line)
+            i += 1
+        if not isThereRequest:
+            await ctx.message.channel.send("there is no request")
+    else:
+        await ctx.message.channel.send("you have not that permission!")
+
+
+
 
 intents = discord.Intents.default()
 intents.members = True
