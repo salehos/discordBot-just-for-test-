@@ -166,15 +166,10 @@ async def showreserved(ctx):
         reservedList = reservedquestions.readlines()
         reservedquestions.close()
         isThereReserve = False
-        i = 0
         for line in reservedList:
-            if "\n" in line:
-                line = line.replace("\n","")
-        for line in reservedList:
-            if "mark=reserved" in line:
+            if "mark=reserved" in str(line):
                 isThereReserve = True
                 await ctx.message.channel.send(line)
-            i += 1
         if not isThereReserve:
             await ctx.message.channel.send("there is no reserved question")
     else:
