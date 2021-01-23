@@ -89,20 +89,15 @@ async def solved_request(ctx):
         requestedQuestions = open("list.txt","r+")
         requestedlist = requestedQuestions.readlines()
         requestedQuestions.close()
-        for line in requestedlist:
-            if "\n" in line:
-                line = line.replace("\n","")
         message = f"question =  {str(questionAndNumber[0])}    group = group-{str(questionAndNumber[1])}    mark=reserved"
         foundMessage = False
-        if message in requestedlist :
-            print("FUCKOFF")
-            channelMessage = message.replace("reserved","solved")
+        if str(message) in str(requestedlist) :
+            channelMessage = message.replace("mark=reserved","solved ^_^ CONGRATULATIONS")
             await ctx.message.channel.send(str(channelMessage))
             i = 0
             for line in requestedlist:
-                if message in line:
+                if str(message) in str(line):
                     b = True
-                    print("found it")
                     break
                 i += 1
 
@@ -129,14 +124,11 @@ async def unsolved_request(ctx):
         message = f"question =  {str(questionAndNumber[0])}    group = group-{str(questionAndNumber[1])}    mark=reserved"
         foundMessage = False
         if str(message) in str(requestedlist) :
-            print("FUCKOFF")
             await ctx.message.channel.send(str(message) + "\nchanged to \n")
             channelMessage = message.replace("reserved","notreserved")
             await ctx.message.channel.send(str(channelMessage))
             i = 0
             for line in requestedlist:
-                print(message)
-                print(line)
                 if message in line:
                     foundMessage = True
                     break
