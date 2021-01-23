@@ -19,6 +19,8 @@ def reserved_before(message):
 
 bot = commands.Bot(command_prefix='$')
 
+
+# this method is for handling user requests
 @bot.command(name= "request", help = "($request [question number]) for request mentor for question FOR MEMBERS")
 async def question_request(ctx):
     response = "There is a problem"
@@ -52,6 +54,8 @@ async def question_request(ctx):
         else:
             await ctx.message.channel.send(reserved_before(ctx.message))
 
+
+#this method is for handling mentor requests and give them the last request
 @bot.command(name= "solve", help = "($solve for solving problems and requests, FOR MENTORS")
 async def solve_request(ctx):
     if "MENTOR" in str(ctx.message.author.roles):
@@ -74,6 +78,8 @@ async def solve_request(ctx):
         responce = "YOU HAVE NOT MENTOR PERMISSION BITCH!"
         await ctx.message.channel.send(responce)
 
+
+#this method is for solved requests that has been taken by mentors
 @bot.command(name= "solved", help = "($solved questionnumber group for solved problems, FOR MENTORS")
 async def solved_request(ctx):
     if "MENTOR" in str(ctx.message.author.roles):
@@ -110,7 +116,7 @@ async def solved_request(ctx):
                 await ctx.message.channel.send("there is no reserved question for this group and this question")
 
 
-
+# this methos is for requests that has been not solved!?
 @bot.command(name="notsolved", help="($unsolved questionnumber group for unsolved problems, FOR MENTORS")
 async def unsolved_request(ctx):
     if "MENTOR" in str(ctx.message.author.roles):
@@ -152,7 +158,7 @@ async def unsolved_request(ctx):
 
 
 
-
+#for showing all reserved requests
 @bot.command(name="showreserved", help="($showreseved) for showing unsolved and reserved questions, FOR MENTORS")
 async def showreserved(ctx):
     if "MENTOR" in str(ctx.message.author.roles):
@@ -174,41 +180,41 @@ async def showreserved(ctx):
     else:
         await ctx.message.channel.send("you have not that permission!")
 
+
+#for showing all unreserved requests
 @bot.command(name="showrequests", help="($showrequests) for showing all unreserved questions, FOR MENTORS")
 async def showrequests(ctx):
     if "MENTOR" in str(ctx.message.author.roles):
         reservedquestions = open("list.txt", "r+")
         reservedList = reservedquestions.readlines()
         reservedquestions.close()
-        i = 0
         isThereRequest = False
         for line in reservedList:
-            if "mark=unreserved" in line:
+            if "mark=notreserved" in str(line):
                 isThereRequest = True
                 await ctx.message.channel.send(line)
-            i += 1
         if not isThereRequest:
             await ctx.message.channel.send("there is no request")
     else:
         await ctx.message.channel.send("you have not that permission!")
 
 
-
-
-intents = discord.Intents.default()
-intents.members = True
-client = discord.Client(intents=intents)
-
-
-
-@client.event
-async def on_member_join(member):
-    print ("hello")
-    await member.create_dm()
-    await member.dm_channel.send(
-        f'سلام. به سرور دیسکورد مسابقه وبلوپرز خوش آمدید!{member.name}'
-    )
 bot.run(TOKEN)
+
+#
+# intents = discord.Intents.default()
+# intents.members = True
+# client = discord.Client(intents=intents)
+#
+#
+#
+# @client.event
+# async def on_member_join(member):
+#     print ("hello")
+#     await member.create_dm()
+#     await member.dm_channel.send(
+#         f'سلام. به سرور دیسکورد مسابقه وبلوپرز خوش آمدید!{member.name}'
+#     )
 
 # import os
 # import discord
