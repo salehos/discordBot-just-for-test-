@@ -124,35 +124,45 @@ async def solve_request(ctx):
 
 
 #this method is for solved requests that has been taken by mentors
-@bot.command(name= "solved", help = "($solved questionnumber group for solved problems, FOR MENTORS")
+@bot.command(name= "solved", help = "($solved question_number group_number) for solved problems, FOR MENTORS")
 async def solved_request(ctx):
-    if "MENTOR" in str(ctx.message.author.roles):
+    if "Staff" in str(ctx.message.author.roles):
         message = str(ctx.message.content)
         message = message.replace("$solved ", "")
         question_and_number = message.split(" ")
-        requested_questions = open("list.txt","r+")
-        requested_list = requested_questions.readlines()
-        requested_questions.close()
-        message = f"question =  {str(question_and_number[0])}    group = group-{str(question_and_number[1])}    mark=reserved"
-        message2 = f"question =  {str(question_and_number[0])}    group = group-{str(question_and_number[1])}    mark=notreserved"
-        found_message = False
-        if (str(message) in str(requested_list)) or (str(message2) in str(requested_list)) :
-            channel_message = message.replace("mark=reserved","solved ^_^ CONGRATULATIONS")
-            await ctx.message.channel.send(str(channel_message))
-            i = 0
-            for line in requested_list:
-                if (str(message2) or str(message)) in str(line):
-                    found_message = True
-                    break
-                i += 1
-            del requested_list[i]
-            new_requested_file = open("list.txt", "w+")
-            for line in requested_list:
-                new_requested_file.write(line)
-            new_requested_file.close()
-        else:
-            if not found_message:
-                await ctx.message.channel.send("there is no reserved question for this group and this question")
+        question_number = question_and_number[0]
+        group_id = question_and_number[1]
+        cur.execute("DELETE FROM webelopers WHERE group_id=? AND question_number=?",(group_id,question_number))
+        await ctx.message.channel.send("Done!")
+# @bot.command(name= "solved", help = "($solved question number group for solved problems, FOR MENTORS")
+# async def solved_request(ctx):
+#     if "MENTOR" in str(ctx.message.author.roles):
+#         message = str(ctx.message.content)
+#         message = message.replace("$solved ", "")
+#         question_and_number = message.split(" ")
+#         requested_questions = open("list.txt","r+")
+#         requested_list = requested_questions.readlines()
+#         requested_questions.close()
+#         message = f"question =  {str(question_and_number[0])}    group = group-{str(question_and_number[1])}    mark=reserved"
+#         message2 = f"question =  {str(question_and_number[0])}    group = group-{str(question_and_number[1])}    mark=notreserved"
+#         found_message = False
+#         if (str(message) in str(requested_list)) or (str(message2) in str(requested_list)) :
+#             channel_message = message.replace("mark=reserved","solved ^_^ CONGRATULATIONS")
+#             await ctx.message.channel.send(str(channel_message))
+#             i = 0
+#             for line in requested_list:
+#                 if (str(message2) or str(message)) in str(line):
+#                     found_message = True
+#                     break
+#                 i += 1
+#             del requested_list[i]
+#             new_requested_file = open("list.txt", "w+")
+#             for line in requested_list:
+#                 new_requested_file.write(line)
+#             new_requested_file.close()
+#         else:
+#             if not found_message:
+#                 await ctx.message.channel.send("there is no reserved question for this group and this question")
 
 
 # this methos is for requests that has been not solved!?
