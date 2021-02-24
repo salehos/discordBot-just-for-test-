@@ -4,6 +4,9 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
+conn = sqlite3.connect('test.db')
+cur = conn.cursor()
+
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
@@ -36,7 +39,7 @@ async def question_request(ctx):
         if row[0]==gp_number and row[1]==question_number:
             notexist = False
     if notexist:
-        cur.execute(f"INSERT INTO webelopers(group_id,question_number,reserve,msg) VALUES({gp_number}, {question_number} , 0 ,{question_text})")
+        cur.execute("INSERT INTO webelopers(group_id,question_number,reserve,msg) VALUES(?, ? , 0 ,?)",(gp_number,question_number,question_text))
         await ctx.message.channel.send(has_been_delevered(ctx.message))
     else:
         await ctx.message.channel.send(reserved_before(ctx.message))
@@ -78,25 +81,46 @@ async def question_request(ctx):
 #this method is for handling mentor requests and give them the last request
 @bot.command(name= "solve", help = "($solve for solving problems and requests, FOR MENTORS")
 async def solve_request(ctx):
-    if "MENTOR" in str(ctx.message.author.roles):
-        my_list = open("list.txt", "r")
-        lines = my_list.readlines()
-        my_list.close()
-        i = 0
-        for line in lines:
-            if "mark=notreserved" in line:
-               break
-            i += 1
-        await ctx.message.channel.send(lines[i])
-        lines[i] = lines[i].replace("notreserved",'reserved')
-        new_file = open("list.txt", "w+")
-        for line in lines:
-            new_file.write(line)
-        new_file.close()
-
+    if "Staff" in str(ctx.message.author.roles):
+        solver_staff = str(ctx.message.author)
+        rows = cur.execute("SELECT id,group_id,question_number,reserve,mentor_list FROM webelopers WHERE reserve=0;").fetchall()
+        match_case_id = -1
+        for row in rows:
+            if row[4]!=None and solver_staff not in row[4]:
+                match_case_id = row[0]
+                group_id = row[1]
+                question_number = row[2]
+                mentor_list = row[4]
+                break
+        await ctx.message.channel.send(f"you must solve question number {question_number} for group number {group_id}")
+        if mentor_list == None:
+            mentor_list=""
+        mentor_list = str(mentor_list)
+        mentor_list += solver_staff+", "
+        cur.execute("UPDATE webelopers SET reserve=? AND mentor_list=? WHERE id=?",(1, mentor_list, match_case_id))
     else:
-        responce = "YOU HAVE NOT MENTOR PERMISSION BITCH!"
-        await ctx.message.channel.send(responce)
+        await ctx.message.channel.send("you have not that permission to do this")
+# @bot.command(name= "solve", help = "($solve for solving problems and requests, FOR MENTORS")
+# async def solve_request(ctx):
+#     if "MENTOR" in str(ctx.message.author.roles):
+#         my_list = open("list.txt", "r")
+#         lines = my_list.readlines()
+#         my_list.close()
+#         i = 0
+#         for line in lines:
+#             if "mark=notreserved" in line:
+#                break
+#             i += 1
+#         await ctx.message.channel.send(lines[i])
+#         lines[i] = lines[i].replace("notreserved",'reserved')
+#         new_file = open("list.txt", "w+")
+#         for line in lines:
+#             new_file.write(line)
+#         new_file.close()
+#
+#     else:
+#         responce = "YOU HAVE NOT MENTOR PERMISSION BITCH!"
+#         await ctx.message.channel.send(responce)
 
 
 #this method is for solved requests that has been taken by mentors
