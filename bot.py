@@ -79,11 +79,11 @@ async def question_request(ctx):
 
 
 #this method is for handling mentor requests and give them the last request
-@bot.command(name= "solve", help = "($solve for solving problems and requests, FOR MENTORS")
+@bot.command(name= "solve", help = "($solve) for solving problems and requests, FOR MENTORS")
 async def solve_request(ctx):
     if "Staff" in str(ctx.message.author.roles):
         solver_staff = str(ctx.message.author)
-        rows = cur.execute("SELECT id,group_id,question_number,reserve,mentor_list FROM webelopers WHERE reserve=0;").fetchall()
+        rows = cur.execute("SELECT id,group_id,question_number,reserve,mentor_list,msg FROM webelopers WHERE reserve=0;").fetchall()
         match_case_id = -1
         for row in rows:
             if row[4]!=None and solver_staff not in row[4]:
@@ -91,8 +91,12 @@ async def solve_request(ctx):
                 group_id = row[1]
                 question_number = row[2]
                 mentor_list = row[4]
+                msg = row[5]
                 break
-        await ctx.message.channel.send(f"you must solve question number {question_number} for group number {group_id}")
+        if msg == None:
+            await ctx.message.channel.send(f"you must solve question number {question_number} for group number {group_id}")
+        else:
+            await ctx.message.channel.send(f"you must solve question number {question_number} for group number {group_id} and they mentions :{msg}")
         if mentor_list == None:
             mentor_list=""
         mentor_list = str(mentor_list)
@@ -169,11 +173,11 @@ async def solved_request(ctx):
 
 
 # this methos is for requests that has been not solved!?
-@bot.command(name="notsolved", help="($unsolved question_number group_number) for unsolved problems, FOR MENTORS")
+@bot.command(name="unsolved", help="($unsolved question_number group_number) for unsolved problems, FOR MENTORS")
 async def unsolved_request(ctx):
     if "Staff" in str(ctx.message.author.roles):
         message = str(ctx.message.content)
-        message = message.replace("$notsolved ", "")
+        message = message.replace("$unsolved ", "")
         question_and_number = message.split(" ")
         question_number = question_and_number[0]
         group_id = question_and_number[1]
@@ -225,37 +229,61 @@ async def unsolved_request(ctx):
 #for showing all reserved requests
 @bot.command(name="showreserved", help="($showreseved) for showing unsolved and reserved questions, FOR MENTORS")
 async def showreserved(ctx):
-    if "MENTOR" in str(ctx.message.author.roles):
-        reserved_questions = open("list.txt", "r+")
-        reserved_list = reserved_questions.readlines()
-        reserved_questions.close()
-        is_there_reserve = False
-        for line in reserved_list:
-            if "mark=reserved" in str(line):
-                is_there_reserve = True
-                await ctx.message.channel.send(line)
-        if not is_there_reserve:
+    if "Staff" in str(ctx.message.author.roles):
+        rows = cur.execute("SELECT group_id,question_number FROM webelopers WHERE reserve=?",(1)).fetchall()
+        if rows != None
+            for row in rows:
+                message  = f"group number {row[0]} has a problem with question number {row[1]} and we are working on it"
+                await ctx.message.channel.send(message)
+        else:
             await ctx.message.channel.send("there is no reserved question")
     else:
         await ctx.message.channel.send("you have not that permission!")
+# @bot.command(name="showreserved", help="($showreseved) for showing unsolved and reserved questions, FOR MENTORS")
+# async def showreserved(ctx):
+#     if "Staff" in str(ctx.message.author.roles):
+#         reserved_questions = open("list.txt", "r+")
+#         reserved_list = reserved_questions.readlines()
+#         reserved_questions.close()
+#         is_there_reserve = False
+#         for line in reserved_list:
+#             if "mark=reserved" in str(line):
+#                 is_there_reserve = True
+#                 await ctx.message.channel.send(line)
+#         if not is_there_reserve:
+#             await ctx.message.channel.send("there is no reserved question")
+#     else:
+#         await ctx.message.channel.send("you have not that permission!")
 
 
 #for showing all unreserved requests
 @bot.command(name="showrequests", help="($showrequests) for showing all unreserved questions, FOR MENTORS")
 async def showrequests(ctx):
-    if "MENTOR" in str(ctx.message.author.roles):
-        reserved_questions = open("list.txt", "r+")
-        reserved_list = reserved_questions.readlines()
-        reserved_questions.close()
-        is_there_request = False
-        for line in reserved_list:
-            if "mark=notreserved" in str(line):
-                is_there_request = True
-                await ctx.message.channel.send(line)
-        if not is_there_request:
-            await ctx.message.channel.send("there is no request")
+    if "Staff" in str(ctx.message.author.roles):
+        rows = cur.execute("SELECT group_id,question_number FROM webelopers WHERE reserve=?",(0)).fetchall()
+        if rows != None
+            for row in rows:
+                message  = f"group number {row[0]} has a problem with question number {row[1]}"
+                await ctx.message.channel.send(message)
+        else:
+            await ctx.message.channel.send("there is question")
     else:
         await ctx.message.channel.send("you have not that permission!")
+# @bot.command(name="showrequests", help="($showrequests) for showing all unreserved questions, FOR MENTORS")
+# async def showrequests(ctx):
+#     if "MENTOR" in str(ctx.message.author.roles):
+#         reserved_questions = open("list.txt", "r+")
+#         reserved_list = reserved_questions.readlines()
+#         reserved_questions.close()
+#         is_there_request = False
+#         for line in reserved_list:
+#             if "mark=notreserved" in str(line):
+#                 is_there_request = True
+#                 await ctx.message.channel.send(line)
+#         if not is_there_request:
+#             await ctx.message.channel.send("there is no request")
+#     else:
+#         await ctx.message.channel.send("you have not that permission!")
 
 
 bot.run(TOKEN)
