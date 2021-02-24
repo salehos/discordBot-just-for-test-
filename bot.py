@@ -134,6 +134,9 @@ async def solved_request(ctx):
         group_id = question_and_number[1]
         cur.execute("DELETE FROM webelopers WHERE group_id=? AND question_number=?",(group_id,question_number))
         await ctx.message.channel.send("Done!")
+    else:
+        responce = "YOU HAVE NOT MENTOR PERMISSION!"
+        await ctx.message.channel.send(responce)
 # @bot.command(name= "solved", help = "($solved question number group for solved problems, FOR MENTORS")
 # async def solved_request(ctx):
 #     if "MENTOR" in str(ctx.message.author.roles):
@@ -166,37 +169,54 @@ async def solved_request(ctx):
 
 
 # this methos is for requests that has been not solved!?
-@bot.command(name="notsolved", help="($unsolved questionnumber group for unsolved problems, FOR MENTORS")
+@bot.command(name="notsolved", help="($unsolved question_number group_number) for unsolved problems, FOR MENTORS")
 async def unsolved_request(ctx):
-    if "MENTOR" in str(ctx.message.author.roles):
+    if "Staff" in str(ctx.message.author.roles):
         message = str(ctx.message.content)
         message = message.replace("$notsolved ", "")
         question_and_number = message.split(" ")
-        requested_questions = open("list.txt","r+")
-        requested_list = requested_questions.readlines()
-        requested_questions.close()
-        message = f"question =  {str(question_and_number[0])}    group = group-{str(question_and_number[1])}    mark=reserved"
-        found_message = False
-        if str(message) in str(requested_list) :
-            await ctx.message.channel.send(str(message) + "\nchanged to \n")
-            channel_message = message.replace("reserved","notreserved")
-            await ctx.message.channel.send(str(channel_message))
-            i = 0
-            for line in requested_list:
-                if message in line:
-                    found_message = True
-                    break
-                i += 1
-            requested_list[i] = requested_list[i].replace("reserved","notreserved")
-            new_requested_file = open("list.txt", "w+")
-            for line in requested_list:
-                new_requested_file.write(line)
-            new_requested_file.close()
+        question_number = question_and_number[0]
+        group_id = question_and_number[1]
+        rows = cur.execute("SELECT group_id,question_number,reserve FROM webelopers WHERE group_id=? AND question_number=? AND reserve=?;",(group_id,question_number,1)).fetchall()
+        if not rows:
+            await ctx.message.channel.send("there is no reserved question for this group and this question")
+            return 0
         else:
-            if not found_message:
-                await ctx.message.channel.send("there is no reserved question for this group and this question")
+            cur.execute("UPDATE webelopers SET reserve=? WHERE group_id=? AND question_number",(0, group_id, question_number))
+            await ctx.message.channel.send("FIXED!")
     else:
         await ctx.message.channel.send("you have not that permission")
+# @bot.command(name="notsolved", help="($unsolved question_number group_number) for unsolved problems, FOR MENTORS")
+# async def unsolved_request(ctx):
+#     if "MENTOR" in str(ctx.message.author.roles):
+#         message = str(ctx.message.content)
+#         message = message.replace("$notsolved ", "")
+#         question_and_number = message.split(" ")
+#         requested_questions = open("list.txt","r+")
+#         requested_list = requested_questions.readlines()
+#         requested_questions.close()
+#         message = f"question =  {str(question_and_number[0])}    group = group-{str(question_and_number[1])}    mark=reserved"
+#         found_message = False
+#         if str(message) in str(requested_list) :
+#             await ctx.message.channel.send(str(message) + "\nchanged to \n")
+#             channel_message = message.replace("reserved","notreserved")
+#             await ctx.message.channel.send(str(channel_message))
+#             i = 0
+#             for line in requested_list:
+#                 if message in line:
+#                     found_message = True
+#                     break
+#                 i += 1
+#             requested_list[i] = requested_list[i].replace("reserved","notreserved")
+#             new_requested_file = open("list.txt", "w+")
+#             for line in requested_list:
+#                 new_requested_file.write(line)
+#             new_requested_file.close()
+#         else:
+#             if not found_message:
+#                 await ctx.message.channel.send("there is no reserved question for this group and this question")
+#     else:
+#         await ctx.message.channel.send("you have not that permission")
 
 
 
