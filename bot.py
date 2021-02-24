@@ -15,44 +15,64 @@ def reserved_before(message):
     response = "you reserved a request before"
     return (response)
 
-
-
 bot = commands.Bot(command_prefix='$')
 
-
-# this method is for handling user requests
-@bot.command(name= "request", help = "($request [question number]) for request mentor for question FOR MEMBERS")
+@bot.command(name= "request", help = "($request [question number] : [question text]) for request mentor for question FOR MEMBERS")
 async def question_request(ctx):
     response = "There is a problem"
-    number_of_question = str(ctx.message.content)
-    number_of_question = number_of_question.replace("$request ", "")
-    my_list = open("list.txt", "r+")
-    request_list = my_list.read()
-    my_list.close()
-    if (str(ctx.message.channel) == "group-1") and ("request" in str(ctx.message.content)):
-        if f"question =  {number_of_question}    group = group-1    mark=notreserved" not in request_list :
-            messages = "question = " +  str(ctx.message.content).replace("$request", "")
-            messages += "    " + "group = group-1    mark=notreserved\n"
-            my_list = open("list.txt" , "a+")
-            my_list.write(messages)
-            my_list.flush()
-            my_list.close()
-            await ctx.message.channel.send(has_been_delevered(ctx.message))
-        else:
-            await ctx.message.channel.send(reserved_before(ctx.message))
-
-
-    elif (str(ctx.message.channel) == "group-2") and ("request" in str(ctx.message.content)):
-        if f"question =  {number_of_question}    group = group-2    mark=notreserved" not in request_list:
-            messages = "question = " + str(ctx.message.content).replace("$request","")
-            messages += "    " + "group = group-2    mark=notreserved\n"
-            my_list = open("list.txt", "a+")
-            my_list.write(messages)
-            my_list.flush()
-            my_list.close()
-            await ctx.message.channel.send(has_been_delevered(ctx.message))
-        else:
-            await ctx.message.channel.send(reserved_before(ctx.message))
+    notexist = True
+    inputstr = str(ctx.message.content).replace("$request", "")
+    question_number_and_text = inputstr.split(":")
+    question_number = int(question_number_and_text[0])
+    group_number = str(ctx.message.channel)
+    group_number = group_number.split("-")
+    group_number = group_number[1:]
+    gp_number = int(group_number[0])
+    question_text = ""
+    if len(b)>1:
+        question_text = str(question_number_and_text[1:])
+    rows = cur.execute("SELECT group_id,question_number FROM webelopers").fetchall()
+    for row in rows:
+        if row[0]==gp_number and row[1]==question_number:
+            notexist = False
+    if notexist:
+        cur.execute(f"INSERT INTO webelopers(group_id,question_number,reserve,msg) VALUES({gp_number}, {question_number} , 0 ,{question_text})")
+        await ctx.message.channel.send(has_been_delevered(ctx.message))
+    else:
+        await ctx.message.channel.send(reserved_before(ctx.message))
+# this method is for handling user requests
+# @bot.command(name= "request", help = "($request [question number]) for request mentor for question FOR MEMBERS")
+# async def question_request(ctx):
+#     response = "There is a problem"
+#     number_of_question = str(ctx.message.content)
+#     number_of_question = number_of_question.replace("$request ", "")
+#     my_list = open("list.txt", "r+")
+#     request_list = my_list.read()
+#     my_list.close()
+#     if (str(ctx.message.channel) == "group-1") and ("request" in str(ctx.message.content)):
+#         if f"question =  {number_of_question}    group = group-1    mark=notreserved" not in request_list :
+#             messages = "question = " +  str(ctx.message.content).replace("$request", "")
+#             messages += "    " + "group = group-1    mark=notreserved\n"
+#             my_list = open("list.txt" , "a+")
+#             my_list.write(messages)
+#             my_list.flush()
+#             my_list.close()
+#             await ctx.message.channel.send(has_been_delevered(ctx.message))
+#         else:
+#             await ctx.message.channel.send(reserved_before(ctx.message))
+#
+#
+#     elif (str(ctx.message.channel) == "group-2") and ("request" in str(ctx.message.content)):
+#         if f"question =  {number_of_question}    group = group-2    mark=notreserved" not in request_list:
+#             messages = "question = " + str(ctx.message.content).replace("$request","")
+#             messages += "    " + "group = group-2    mark=notreserved\n"
+#             my_list = open("list.txt", "a+")
+#             my_list.write(messages)
+#             my_list.flush()
+#             my_list.close()
+#             await ctx.message.channel.send(has_been_delevered(ctx.message))
+#         else:
+#             await ctx.message.channel.send(reserved_before(ctx.message))
 
 
 #this method is for handling mentor requests and give them the last request
