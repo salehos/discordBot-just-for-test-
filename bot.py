@@ -1,14 +1,11 @@
 import os
 import discord
-
+import sqlite3
 from discord.ext import commands
-from dotenv import load_dotenv
 
-conn = sqlite3.connect('test.db')
+conn = sqlite3.connect('webelopers.db')
 cur = conn.cursor()
 
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
 
 def has_been_delevered (message):
     response = "your message has been delivered"
@@ -18,318 +15,155 @@ def reserved_before(message):
     response = "you reserved a request before"
     return (response)
 
-bot = commands.Bot(command_prefix='$')
+bot = commands.Bot(command_prefix="-")
 
-@bot.command(name= "request", help = "($request [question number] : [question text]) for request mentor for question FOR MEMBERS")
+# cur.execute("CREATE TABLE IF NOT EXISTS webelopers(id integer PRIMARY KEY,group_id integer NOT NULL,msg text NOT NULL,reserve integer NOT NULL, mentor_list text);")
+
+# import sqlite3
+# con =sqlite3.connect('webelopers.db')
+# cur = con.cursor()
+# cur.execute('DELETE FROM webelopers',);
+# con.commit()
+
+
+
+@bot.command(name= "request", help = "(-request [question text]) for request mentor for a problem || FOR MEMBERS")
 async def question_request(ctx):
+    print("goes into request")
     response = "There is a problem"
     notexist = True
-    inputstr = str(ctx.message.content).replace("$request", "")
-    question_number_and_text = inputstr.split(":")
-    question_number = int(question_number_and_text[0])
+    inputstr = str(ctx.message.content).replace("-request", "")
+    question_text = inputstr
+    # question_number = int(question_number_and_text[0])
     group_number = str(ctx.message.channel)
     group_number = group_number.split("-")
     group_number = group_number[1:]
     gp_number = int(group_number[0])
-    question_text = ""
-    if len(b)>1:
-        question_text = str(question_number_and_text[1:])
-    rows = cur.execute("SELECT group_id,question_number FROM webelopers").fetchall()
-    for row in rows:
-        if row[0]==gp_number and row[1]==question_number:
-            notexist = False
-    if notexist:
-        cur.execute("INSERT INTO webelopers(group_id,question_number,reserve,msg) VALUES(?, ? , 0 ,?)",(gp_number,question_number,question_text))
-        await ctx.message.channel.send(has_been_delevered(ctx.message))
-    else:
-        await ctx.message.channel.send(reserved_before(ctx.message))
-# this method is for handling user requests
-# @bot.command(name= "request", help = "($request [question number]) for request mentor for question FOR MEMBERS")
-# async def question_request(ctx):
-#     response = "There is a problem"
-#     number_of_question = str(ctx.message.content)
-#     number_of_question = number_of_question.replace("$request ", "")
-#     my_list = open("list.txt", "r+")
-#     request_list = my_list.read()
-#     my_list.close()
-#     if (str(ctx.message.channel) == "group-1") and ("request" in str(ctx.message.content)):
-#         if f"question =  {number_of_question}    group = group-1    mark=notreserved" not in request_list :
-#             messages = "question = " +  str(ctx.message.content).replace("$request", "")
-#             messages += "    " + "group = group-1    mark=notreserved\n"
-#             my_list = open("list.txt" , "a+")
-#             my_list.write(messages)
-#             my_list.flush()
-#             my_list.close()
-#             await ctx.message.channel.send(has_been_delevered(ctx.message))
-#         else:
-#             await ctx.message.channel.send(reserved_before(ctx.message))
-#
-#
-#     elif (str(ctx.message.channel) == "group-2") and ("request" in str(ctx.message.content)):
-#         if f"question =  {number_of_question}    group = group-2    mark=notreserved" not in request_list:
-#             messages = "question = " + str(ctx.message.content).replace("$request","")
-#             messages += "    " + "group = group-2    mark=notreserved\n"
-#             my_list = open("list.txt", "a+")
-#             my_list.write(messages)
-#             my_list.flush()
-#             my_list.close()
-#             await ctx.message.channel.send(has_been_delevered(ctx.message))
-#         else:
-#             await ctx.message.channel.send(reserved_before(ctx.message))
+    # question_text = ""
+    # if len(question_number_and_text)>1:
+    #     question_text = str(question_number_and_text[1:])
+    rows = cur.execute("SELECT group_id,msg FROM webelopers").fetchall()
+    cur.execute("INSERT INTO webelopers(group_id,msg,reserve) VALUES(?, ? , 0)",(gp_number,question_text))
+    conn.commit()
+    print("create request")
+    await ctx.message.channel.send(has_been_delevered(ctx.message))
 
 
 #this method is for handling mentor requests and give them the last request
-@bot.command(name= "solve", help = "($solve) for solving problems and requests, FOR MENTORS")
+@bot.command(name= "solve", help = "(-solve) for solving problems and requests, FOR MENTORS")
 async def solve_request(ctx):
     if "Staff" in str(ctx.message.author.roles):
+        print("goes in solve")
         solver_staff = str(ctx.message.author)
-        rows = cur.execute("SELECT id,group_id,question_number,reserve,mentor_list,msg FROM webelopers WHERE reserve=0;").fetchall()
-        match_case_id = -1
+        rows = cur.execute("SELECT id,group_id,msg,reserve,mentor_list FROM webelopers WHERE reserve=0;").fetchall()
+        if rows == []:
+            await ctx.message.channel.send("سوالی برای اختصاص به منتورها وجود ندارد")
+            return
+        match_case_id = None
+        group_id = None
+        mentor_list = None
+        msg = None
+        reserve = None
         for row in rows:
-            if row[4]!=None and solver_staff not in row[4]:
+            if (row[4]!=None and solver_staff not in row[4]) or row[4] == None:
                 match_case_id = row[0]
                 group_id = row[1]
-                question_number = row[2]
+                msg = row[2]
+                reserve = row[3]
                 mentor_list = row[4]
-                msg = row[5]
                 break
-        if msg == None:
-            await ctx.message.channel.send(f"you must solve question number {question_number} for group number {group_id}")
-        else:
-            await ctx.message.channel.send(f"you must solve question number {question_number} for group number {group_id} and they mentions :{msg}")
+
+        await ctx.message.channel.send(f"گروه شماره{group_id}سوالی باشماره آیدی {match_case_id} دارد و سوال آنها به شرح زیر است: {msg}")
+        print("did solve")
         if mentor_list == None:
             mentor_list=""
         mentor_list = str(mentor_list)
         mentor_list += solver_staff+", "
-        cur.execute("UPDATE webelopers SET reserve=? AND mentor_list=? WHERE id=?",(1, mentor_list, match_case_id))
+        print("----------------------------------------------------------------------")
+        print(str(reserve)  +"\n"+ str(mentor_list) +"\n" + str(match_case_id))
+        print("----------------------------------------------------------------------")
+        cur.execute("UPDATE webelopers set reserve=?,mentor_list=? WHERE id=?",(1,mentor_list, int(match_case_id)))
+        conn.commit()
+        print("change reserve id")
     else:
         await ctx.message.channel.send("you have not that permission to do this")
-# @bot.command(name= "solve", help = "($solve for solving problems and requests, FOR MENTORS")
-# async def solve_request(ctx):
-#     if "MENTOR" in str(ctx.message.author.roles):
-#         my_list = open("list.txt", "r")
-#         lines = my_list.readlines()
-#         my_list.close()
-#         i = 0
-#         for line in lines:
-#             if "mark=notreserved" in line:
-#                break
-#             i += 1
-#         await ctx.message.channel.send(lines[i])
-#         lines[i] = lines[i].replace("notreserved",'reserved')
-#         new_file = open("list.txt", "w+")
-#         for line in lines:
-#             new_file.write(line)
-#         new_file.close()
-#
-#     else:
-#         responce = "YOU HAVE NOT MENTOR PERMISSION BITCH!"
-#         await ctx.message.channel.send(responce)
 
 
 #this method is for solved requests that has been taken by mentors
-@bot.command(name= "solved", help = "($solved question_number group_number) for solved problems, FOR MENTORS")
+@bot.command(name= "solved", help = "(-solved row.ID) for solved problems, FOR MENTORS")
 async def solved_request(ctx):
     if "Staff" in str(ctx.message.author.roles):
+        print("goes into solved")
         message = str(ctx.message.content)
-        message = message.replace("$solved ", "")
-        question_and_number = message.split(" ")
-        question_number = question_and_number[0]
-        group_id = question_and_number[1]
-        cur.execute("DELETE FROM webelopers WHERE group_id=? AND question_number=?",(group_id,question_number))
+        message = message.replace("-solved ", "")
+        print(message)
+        message = int(message)
+        cur.execute("DELETE FROM webelopers WHERE id = ?",(message,))
+        conn.commit()
+        print("did solved")
         await ctx.message.channel.send("Done!")
     else:
         responce = "YOU HAVE NOT MENTOR PERMISSION!"
         await ctx.message.channel.send(responce)
-# @bot.command(name= "solved", help = "($solved question number group for solved problems, FOR MENTORS")
-# async def solved_request(ctx):
-#     if "MENTOR" in str(ctx.message.author.roles):
-#         message = str(ctx.message.content)
-#         message = message.replace("$solved ", "")
-#         question_and_number = message.split(" ")
-#         requested_questions = open("list.txt","r+")
-#         requested_list = requested_questions.readlines()
-#         requested_questions.close()
-#         message = f"question =  {str(question_and_number[0])}    group = group-{str(question_and_number[1])}    mark=reserved"
-#         message2 = f"question =  {str(question_and_number[0])}    group = group-{str(question_and_number[1])}    mark=notreserved"
-#         found_message = False
-#         if (str(message) in str(requested_list)) or (str(message2) in str(requested_list)) :
-#             channel_message = message.replace("mark=reserved","solved ^_^ CONGRATULATIONS")
-#             await ctx.message.channel.send(str(channel_message))
-#             i = 0
-#             for line in requested_list:
-#                 if (str(message2) or str(message)) in str(line):
-#                     found_message = True
-#                     break
-#                 i += 1
-#             del requested_list[i]
-#             new_requested_file = open("list.txt", "w+")
-#             for line in requested_list:
-#                 new_requested_file.write(line)
-#             new_requested_file.close()
-#         else:
-#             if not found_message:
-#                 await ctx.message.channel.send("there is no reserved question for this group and this question")
 
 
 # this methos is for requests that has been not solved!?
-@bot.command(name="unsolved", help="($unsolved question_number group_number) for unsolved problems, FOR MENTORS")
+@bot.command(name="unsolved", help="(-unsolved row.ID) for unsolved problems, FOR MENTORS")
 async def unsolved_request(ctx):
     if "Staff" in str(ctx.message.author.roles):
+        print("goes into unsolved")
         message = str(ctx.message.content)
-        message = message.replace("$unsolved ", "")
-        question_and_number = message.split(" ")
-        question_number = question_and_number[0]
-        group_id = question_and_number[1]
-        rows = cur.execute("SELECT group_id,question_number,reserve FROM webelopers WHERE group_id=? AND question_number=? AND reserve=?;",(group_id,question_number,1)).fetchall()
-        if not rows:
+        message = message.replace("-unsolved ", "")
+        message = int(message)
+        rows = cur.execute("SELECT id FROM webelopers").fetchall()
+        id_list = []
+        for row in rows:
+            id_list.append(row[0])
+        if message not in id_list:
             await ctx.message.channel.send("there is no reserved question for this group and this question")
             return 0
         else:
-            cur.execute("UPDATE webelopers SET reserve=? WHERE group_id=? AND question_number",(0, group_id, question_number))
+            cur.execute("UPDATE webelopers SET reserve=? WHERE id=?",(0, message))
+            print("back to unsolved problems")
             await ctx.message.channel.send("FIXED!")
+            conn.commit()
     else:
         await ctx.message.channel.send("you have not that permission")
-# @bot.command(name="notsolved", help="($unsolved question_number group_number) for unsolved problems, FOR MENTORS")
-# async def unsolved_request(ctx):
-#     if "MENTOR" in str(ctx.message.author.roles):
-#         message = str(ctx.message.content)
-#         message = message.replace("$notsolved ", "")
-#         question_and_number = message.split(" ")
-#         requested_questions = open("list.txt","r+")
-#         requested_list = requested_questions.readlines()
-#         requested_questions.close()
-#         message = f"question =  {str(question_and_number[0])}    group = group-{str(question_and_number[1])}    mark=reserved"
-#         found_message = False
-#         if str(message) in str(requested_list) :
-#             await ctx.message.channel.send(str(message) + "\nchanged to \n")
-#             channel_message = message.replace("reserved","notreserved")
-#             await ctx.message.channel.send(str(channel_message))
-#             i = 0
-#             for line in requested_list:
-#                 if message in line:
-#                     found_message = True
-#                     break
-#                 i += 1
-#             requested_list[i] = requested_list[i].replace("reserved","notreserved")
-#             new_requested_file = open("list.txt", "w+")
-#             for line in requested_list:
-#                 new_requested_file.write(line)
-#             new_requested_file.close()
-#         else:
-#             if not found_message:
-#                 await ctx.message.channel.send("there is no reserved question for this group and this question")
-#     else:
-#         await ctx.message.channel.send("you have not that permission")
 
 
 
 
 
 #for showing all reserved requests
-@bot.command(name="showreserved", help="($showreseved) for showing unsolved and reserved questions, FOR MENTORS")
+@bot.command(name="showreserved", help="(-showreseved) for showing unsolved and reserved questions, FOR MENTORS")
 async def showreserved(ctx):
     if "Staff" in str(ctx.message.author.roles):
-        rows = cur.execute("SELECT group_id,question_number FROM webelopers WHERE reserve=?",(1)).fetchall()
-        if rows != None
+        rows = cur.execute("SELECT group_id,msg FROM webelopers WHERE reserve=1").fetchall()
+        if rows != None:
             for row in rows:
-                message  = f"group number {row[0]} has a problem with question number {row[1]} and we are working on it"
+                message  = f"group number {row[0]} has a problem with question text {row[1]} and we are working on it"
                 await ctx.message.channel.send(message)
         else:
             await ctx.message.channel.send("there is no reserved question")
     else:
         await ctx.message.channel.send("you have not that permission!")
-# @bot.command(name="showreserved", help="($showreseved) for showing unsolved and reserved questions, FOR MENTORS")
-# async def showreserved(ctx):
-#     if "Staff" in str(ctx.message.author.roles):
-#         reserved_questions = open("list.txt", "r+")
-#         reserved_list = reserved_questions.readlines()
-#         reserved_questions.close()
-#         is_there_reserve = False
-#         for line in reserved_list:
-#             if "mark=reserved" in str(line):
-#                 is_there_reserve = True
-#                 await ctx.message.channel.send(line)
-#         if not is_there_reserve:
-#             await ctx.message.channel.send("there is no reserved question")
-#     else:
-#         await ctx.message.channel.send("you have not that permission!")
+
 
 
 #for showing all unreserved requests
-@bot.command(name="showrequests", help="($showrequests) for showing all unreserved questions, FOR MENTORS")
+@bot.command(name="showrequests", help="(-showrequests) for showing all unreserved questions, FOR MENTORS")
 async def showrequests(ctx):
     if "Staff" in str(ctx.message.author.roles):
-        rows = cur.execute("SELECT group_id,question_number FROM webelopers WHERE reserve=?",(0)).fetchall()
-        if rows != None
+        rows = cur.execute("SELECT group_id,msg FROM webelopers WHERE reserve=0").fetchall()
+        if rows != None:
             for row in rows:
-                message  = f"group number {row[0]} has a problem with question number {row[1]}"
+                message  = f"group number {row[0]} has a problem with question text {row[1]}"
                 await ctx.message.channel.send(message)
         else:
             await ctx.message.channel.send("there is question")
     else:
         await ctx.message.channel.send("you have not that permission!")
-# @bot.command(name="showrequests", help="($showrequests) for showing all unreserved questions, FOR MENTORS")
-# async def showrequests(ctx):
-#     if "MENTOR" in str(ctx.message.author.roles):
-#         reserved_questions = open("list.txt", "r+")
-#         reserved_list = reserved_questions.readlines()
-#         reserved_questions.close()
-#         is_there_request = False
-#         for line in reserved_list:
-#             if "mark=notreserved" in str(line):
-#                 is_there_request = True
-#                 await ctx.message.channel.send(line)
-#         if not is_there_request:
-#             await ctx.message.channel.send("there is no request")
-#     else:
-#         await ctx.message.channel.send("you have not that permission!")
+
 
 
 bot.run(TOKEN)
-
-#
-# intents = discord.Intents.default()
-# intents.members = True
-# client = discord.Client(intents=intents)
-#
-#
-#
-# @client.event
-# async def on_member_join(member):
-#     print ("hello")
-#     await member.create_dm()
-#     await member.dm_channel.send(
-#         f'سلام. به سرور دیسکورد مسابقه وبلوپرز خوش آمدید!{member.name}'
-#     )
-
-# import os
-# import discord
-# from dotenv import load_dotenv
-# from discord.ext import commands
-#
-# load_dotenv()
-# TOKEN = os.getenv('DISCORD_TOKEN')
-# GUILD = os.getenv('DISCORD_GUILD')
-#
-#
-#
-#
-#
-# @client.event
-# async def on_ready():
-#     guild = discord.utils.find(lambda g: g.name == GUILD, client.guilds)
-#     print(f'{client.user.name} has connected to Discord!')
-#
-#
-# @client.event
-# async def on_member_join(member):
-#     await member.create_dm()
-#     await member.dm_channel.send(
-#         f'سلام. به سرور دیسکورد مسابقه وبلوپرز خوش آمدید!{member.name}'
-#     )
-#
-#
-#
-# client.run(TOKEN)
-#
