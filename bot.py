@@ -6,6 +6,8 @@ from discord.ext import commands
 conn = sqlite3.connect('webelopers.db')
 cur = conn.cursor()
 
+TOKEN = "ODEzODU1ODQ2OTc0NjE5Njc4.YDVYUg.u3VQeJjZyCs5QJlEL03RJ_9QJyE"
+
 
 def has_been_delevered (message):
     response = "your message has been delivered"
@@ -29,7 +31,6 @@ bot = commands.Bot(command_prefix="-")
 
 @bot.command(name= "request", help = "(-request [question text]) for request mentor for a problem || FOR MEMBERS")
 async def question_request(ctx):
-    print("goes into request")
     response = "There is a problem"
     notexist = True
     inputstr = str(ctx.message.content).replace("-request", "")
@@ -42,18 +43,19 @@ async def question_request(ctx):
     # question_text = ""
     # if len(question_number_and_text)>1:
     #     question_text = str(question_number_and_text[1:])
-    rows = cur.execute("SELECT group_id,msg FROM webelopers").fetchall()
     cur.execute("INSERT INTO webelopers(group_id,msg,reserve) VALUES(?, ? , 0)",(gp_number,question_text))
     conn.commit()
-    print("create request")
     await ctx.message.channel.send(has_been_delevered(ctx.message))
+    # channel = bot.get_channel("814359855137030144")
+    logmsg = f"group number{group_number} has a specific question with text: {question_text}"
+    print(logmsg)
+    # await channel.send(logmsg)
 
 
 #this method is for handling mentor requests and give them the last request
 @bot.command(name= "solve", help = "(-solve) for solving problems and requests, FOR MENTORS")
 async def solve_request(ctx):
     if "Staff" in str(ctx.message.author.roles):
-        print("goes in solve")
         solver_staff = str(ctx.message.author)
         rows = cur.execute("SELECT id,group_id,msg,reserve,mentor_list FROM webelopers WHERE reserve=0;").fetchall()
         if rows == []:
@@ -72,19 +74,21 @@ async def solve_request(ctx):
                 reserve = row[3]
                 mentor_list = row[4]
                 break
-
+        if group_id==None and match_case_id == None:
+            await ctx.message.channel.send("سوالی برای اختصاص به شما وجود ندارد")
+            return
         await ctx.message.channel.send(f"گروه شماره{group_id}سوالی باشماره آیدی {match_case_id} دارد و سوال آنها به شرح زیر است: {msg}")
-        print("did solve")
+
         if mentor_list == None:
             mentor_list=""
         mentor_list = str(mentor_list)
         mentor_list += solver_staff+", "
-        print("----------------------------------------------------------------------")
-        print(str(reserve)  +"\n"+ str(mentor_list) +"\n" + str(match_case_id))
-        print("----------------------------------------------------------------------")
         cur.execute("UPDATE webelopers set reserve=?,mentor_list=? WHERE id=?",(1,mentor_list, int(match_case_id)))
         conn.commit()
-        print("change reserve id")
+        # channel = bot.get_channel("814359855137030144")
+        logmsg = f"mentor :{solver_staff} take a question from group :{group_id} with text: {msg} and id:{match_case_id}"
+        print(logmsg)
+        # await channel.send(logmsg)
     else:
         await ctx.message.channel.send("you have not that permission to do this")
 
@@ -93,14 +97,17 @@ async def solve_request(ctx):
 @bot.command(name= "solved", help = "(-solved row.ID) for solved problems, FOR MENTORS")
 async def solved_request(ctx):
     if "Staff" in str(ctx.message.author.roles):
-        print("goes into solved")
+        solver_staff = str(ctx.message.author)
         message = str(ctx.message.content)
         message = message.replace("-solved ", "")
         print(message)
         message = int(message)
         cur.execute("DELETE FROM webelopers WHERE id = ?",(message,))
         conn.commit()
-        print("did solved")
+        # channel = bot.get_channel("814359855137030144")
+        logmsg = f"mentor :{solver_staff} just solved question with id :{message}"
+        print(logmsg)
+        # await channel.send(logmsg)
         await ctx.message.channel.send("Done!")
     else:
         responce = "YOU HAVE NOT MENTOR PERMISSION!"
@@ -111,7 +118,7 @@ async def solved_request(ctx):
 @bot.command(name="unsolved", help="(-unsolved row.ID) for unsolved problems, FOR MENTORS")
 async def unsolved_request(ctx):
     if "Staff" in str(ctx.message.author.roles):
-        print("goes into unsolved")
+        solver_staff = str(ctx.message.author)
         message = str(ctx.message.content)
         message = message.replace("-unsolved ", "")
         message = int(message)
@@ -124,7 +131,10 @@ async def unsolved_request(ctx):
             return 0
         else:
             cur.execute("UPDATE webelopers SET reserve=? WHERE id=?",(0, message))
-            print("back to unsolved problems")
+            # channel = bot.get_channel("814359855137030144")
+            logmsg = f"mentor :{solver_staff} couldnt solved question with id :{message}"
+            print(logmsg)
+            # await channel.send(logmsg)
             await ctx.message.channel.send("FIXED!")
             conn.commit()
     else:
